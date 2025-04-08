@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#ffffff" id="theme-color">
   <title>全屏图片展示</title>
   <style>
@@ -103,7 +103,6 @@
     }
 
     .page.active {
-
       left: 0;  /* 激活时移动到正常位置 */
     }
 
@@ -492,8 +491,8 @@
       scanQrCode.addEventListener('click', () => {
         scanPage.classList.add('active');
         startCamera(); // 激活摄像头
-        // 扫一扫页面使用黑色状态栏
-        changeStatusBarColor('#000000');
+        // 扫一扫页面使用透明状态栏
+        changeStatusBarColor('transparent');
       });
 
       scanPage.addEventListener('click', () => {
@@ -501,7 +500,7 @@
         scanPage.classList.remove('active');
         imgContainer2.classList.add('active');
         // 电子工卡页面使用蓝色状态栏
-        changeStatusBarColor('#031F57');
+        changeStatusBarColor('#4E75E3');
       });
 
       // 返回按钮
@@ -528,13 +527,13 @@
       myCard.addEventListener('click', () => {
         imgContainer3.classList.add('active');
         // 我的工卡页面使用绿色状态栏
-        changeStatusBarColor('#4E75E3');
+        changeStatusBarColor('#031F57');
       });
       
       resultImgClose.addEventListener('click', () => {
         imgContainer3.classList.remove('active');
         // 返回电子工卡页面，使用蓝色状态栏
-        changeStatusBarColor('#031F57');
+        changeStatusBarColor('#4E75E3');
       });
     });
   </script>
