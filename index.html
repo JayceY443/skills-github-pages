@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>全屏图片展示</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .img-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #FFF;
+      position: relative;
+    }
+
+    .full-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .add-button {
+      position: absolute;
+      top: 65px;
+      right: 6px;
+      width: 40px;
+      height: 40px;
+      /* background-color: rgba(0, 0, 0, 0.5);
+            color: white; */
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 10;
+      /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); */
+    }
+
+    .dropdown {
+      position: absolute;
+      top: 100px;
+      right: -250px;
+      width: 160px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      transition: right 0.3s ease;
+      z-index: 9;
+    }
+
+    .dropdown.active {
+      right: 20px;
+    }
+
+    .dropdown-item {
+      padding: 8px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    /* 扫一扫页面样式 */
+    .page {
+      position: absolute;
+      top: 0;
+      left: 100%;  /* 初始位置在右侧屏幕外 */
+      width: 100%;
+      height: 100%;
+      background-color: #FFF;
+      z-index: 20;
+      transition: left 0.3s ease;  /* 添加过渡动画 */
+    }
+
+    .page.active {
+      left: 0;  /* 激活时移动到正常位置 */
+    }
+
+    .scan-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      display: none;
+      left: 100%;  /* 初始位置在右侧 */
+      transition: left 0.3s ease;  /* 过渡动画 */
+    }
+    .scan-page.active {
+      display: flex;
+      left: 0;  /* 激活时移动到正常位置 */
+    }
+
+    .scan-header {
+      width: 100%;
+      height: 50px;
+      display: flex;
+      position: absolute;
+      top: 0;
+      left: 0;
+      align-items: center;
+      padding: 0 15px;
+    }
+
+    .back-button {
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .scan-title {
+      flex: 1;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .scan-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .scan-box {
+      width: 80vw;
+      height: 80vw;
+      max-width: 300px;
+      max-height: 300px;
+      /* border: 2px solid rgba(255, 255, 255, 0.8); */
+      border-radius: 10px;
+      position: relative;
+    }
+
+    .scan-glow {
+      position: absolute;
+      width: 80%;
+      height: 80px;
+      top: -40px;
+      left: 10%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(0, 102, 255, 0.7) 0%, rgba(0, 64, 255, 0.5) 40%, rgba(0, 34, 255, 0) 80%);
+      filter: blur(12px);
+      opacity: 0.9;
+      z-index: 1;
+      animation: glowAnimation 4s linear infinite;
+      box-shadow: 0 0 30px 10px rgba(0, 64, 255, 0.4);
+    }
+
+    .scan-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.1) 3%, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.1) 97%);
+      animation: scanAnimation 4s linear infinite;
+      z-index: 2;
+    }
+
+    .scan-corners {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: #4CAF50;
+      border-style: solid;
+      border-width: 2px 0 0 2px;
+    }
+
+    .top-left {
+      top: -2px;
+      left: -2px;
+      border-top-left-radius: 8px;
+    }
+
+    .top-right {
+      top: -2px;
+      right: -2px;
+      transform: rotate(90deg);
+      border-top-left-radius: 8px;
+    }
+
+    .bottom-left {
+      bottom: -2px;
+      left: -2px;
+      transform: rotate(270deg);
+      border-top-left-radius: 8px;
+    }
+
+    .bottom-right {
+      bottom: -2px;
+      right: -2px;
+      transform: rotate(180deg);
+      border-top-left-radius: 8px;
+    }
+
+    .scan-text {
+      margin-top: 20px;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .permission-title {
+      font-size: 18px;
+      margin-bottom: 15px;
+      text-align: center;
+      color: #333;
+    }
+
+    .permission-text {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .permission-buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .permission-button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .deny-button {
+      background-color: #f1f1f1;
+      color: #333;
+      margin-right: 10px;
+    }
+
+    .allow-button {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .my-card {
+      position: absolute;
+      top: 200px;
+      left: 0;
+      width: 210px;
+      height: 180px;
+      z-index: 30;
+      /* background-color: rgba(0, 0, 0, 0.5); */
+    }
+    .card-close {
+      position: absolute;
+      top: 55px;
+      right: 5px;
+      font-size: 24px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: white;
+    }
+    .card-home {
+      position: absolute;
+      top: 55px;
+      left: 5px;
+      font-size: 24px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: white;
+    }
+    .result-img-close {
+      position: absolute;
+      top: 55px;
+      right: 5px;
+      font-size: 24px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: white;
+    }
+    @keyframes scanAnimation {
+      0% {
+        top: 0;
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      50% {
+
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        top: 100%;
+        opacity: 0;
+      }
+    }
+
+    @keyframes glowAnimation {
+      0% {
+        top: -30px;
+        opacity: 0.6;
+      }
+      
+      100% {
+        top: calc(100% - 30px);
+        opacity: 0.6;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page active">
+    <img class="full-img"
+      src="https://rbrzxzkxabhaeiljimvy.supabase.co/storage/v1/object/public/exam/public/141744111163_.pic_hd.jpg"
+      alt="全屏展示图片">
+    <div class="add-button" id="addButton"></div>
+    <div class="dropdown" id="dropdown">
+      <div class="dropdown-item" id="scanQrCode">扫一扫</div>
+      <div class="dropdown-item">创建群组</div>
+      <div class="dropdown-item">添加外部联系人</div>
+      <div class="dropdown-item">创建文档</div>
+      <div class="dropdown-item">会议室投屏</div>
+    </div>
+  </div>
+
+  <!-- 扫一扫页面 -->
+  <div class="page scan-page" id="scanPage">
+    <div class="scan-header">
+      <div class="back-button" id="backButton">←</div>
+      <div class="scan-title" id="scanTitle">扫一扫</div>
+    </div>
+    <div class="scan-container">
+      <video id="cameraFeed" autoplay playsinline style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: -1;"></video>
+      <div class="scan-box">
+        <div class="scan-glow"></div>
+        <div class="scan-line"></div>
+      </div>
+    </div>
+  </div>
+  <!-- 电子工卡页面 -->
+  <div class="page card-container" id="imgContainer2">
+    <div class="my-card" id="myCard">
+    </div>
+    
+    <div class="card-close" id="cardClose"></div>
+    <img class="full-img"
+      src="https://rbrzxzkxabhaeiljimvy.supabase.co/storage/v1/object/public/exam/public/171744114321_.pic_hd.jpg"
+      alt="全屏展示图片">
+  </div>
+  <!-- 我的工卡页面 -->
+  <div class="page my-card-container" id="imgContainer3">
+    <div class="card-home" id="cardHome"></div>
+    <div class="result-img-close" id="resultImgClose"></div>
+    <img class="full-img"
+      src="https://rbrzxzkxabhaeiljimvy.supabase.co/storage/v1/object/public/exam/public/161744112265_.pic_hd.jpg"
+      alt="全屏展示图片">
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const addButton = document.getElementById('addButton');
+      const dropdown = document.getElementById('dropdown');
+      const scanQrCode = document.getElementById('scanQrCode');
+      const scanPage = document.getElementById('scanPage');
+      const backButton = document.getElementById('backButton');
+      const scanTitle = document.getElementById('scanTitle');
+      const imgContainer2 = document.getElementById('imgContainer2');
+      const resultImgClose = document.getElementById('resultImgClose');
+      const myCard = document.getElementById('myCard');
+      const cameraFeed = document.getElementById('cameraFeed');
+      const cardClose = document.getElementById('cardClose');
+      const cardHome = document.getElementById('cardHome');
+      
+      // 确保页面加载时扫码页面是隐藏的
+      scanPage.classList.remove('active');
+      
+      // 打开摄像头的函数
+      async function startCamera() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }, // 优先使用后置摄像头
+            audio: false
+          });
+          cameraFeed.srcObject = stream;
+        } catch (err) {
+        }
+      }
+      
+      // 关闭摄像头的函数
+      function stopCamera() {
+        if (cameraFeed.srcObject) {
+          const tracks = cameraFeed.srcObject.getTracks();
+          tracks.forEach(track => track.stop());
+          cameraFeed.srcObject = null;
+        }
+      }
+      
+      addButton.addEventListener('click', () => {
+        dropdown.classList.toggle('active');
+      });
+
+      // 点击其他区域关闭下拉菜单
+      document.addEventListener('click', (e) => {
+        if (!addButton.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.remove('active');
+        }
+      });
+
+      // 点击扫一扫
+      scanQrCode.addEventListener('click', () => {
+        scanPage.classList.add('active');
+        startCamera(); // 激活摄像头
+      });
+
+      scanTitle.addEventListener('click', () => {
+        stopCamera(); // 停止摄像头
+        scanPage.classList.remove('active');
+        imgContainer2.classList.add('active');
+      });
+
+      // 返回按钮
+      backButton.addEventListener('click', () => {
+        stopCamera(); // 停止摄像头
+        scanPage.classList.remove('active');
+      });
+
+      cardClose.addEventListener('click', () => {
+        imgContainer2.classList.remove('active');
+      });
+
+      cardHome.addEventListener('click', () => {
+        imgContainer3.classList.remove('active');
+        imgContainer2.classList.remove('active');
+      });
+
+      myCard.addEventListener('click', () => {
+        imgContainer3.classList.add('active');
+      });
+      resultImgClose.addEventListener('click', () => {
+        imgContainer3.classList.remove('active');
+      });
+    });
+  </script>
+</body>
+
+</html>
