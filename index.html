@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>全屏图片展示</title>
   <style>
     * {
@@ -17,6 +19,11 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
 
     .img-container {
@@ -402,6 +409,31 @@
       const cameraFeed = document.getElementById('cameraFeed');
       const cardClose = document.getElementById('cardClose');
       const cardHome = document.getElementById('cardHome');
+      
+      // iOS Safari 全屏模式处理
+      if (navigator.standalone) {
+        document.documentElement.style.height = '100vh';
+        document.body.style.height = '100vh';
+      } else {
+        // 为普通浏览器添加全屏交互处理
+        window.addEventListener('load', () => {
+          // 尝试滚动到顶部以隐藏地址栏
+          setTimeout(() => window.scrollTo(0, 1), 100);
+        });
+        
+        // 处理屏幕方向变化
+        window.addEventListener('orientationchange', () => {
+          setTimeout(() => window.scrollTo(0, 1), 100);
+        });
+        
+        // 处理点击事件，也可以尝试隐藏地址栏
+        document.addEventListener('click', () => {
+          if (!document.documentElement.requestFullscreen && 
+              !document.documentElement.webkitRequestFullscreen) {
+            setTimeout(() => window.scrollTo(0, 1), 100);
+          }
+        });
+      }
       
       // 确保页面加载时扫码页面是隐藏的
       scanPage.classList.remove('active');
