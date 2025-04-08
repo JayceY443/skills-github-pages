@@ -5,7 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff" id="theme-color">
   <title>全屏图片展示</title>
   <style>
     * {
@@ -38,7 +39,7 @@
 
     .full-img {
       width: 100%;
-      height: 100%;
+      max-height: 100%;
       object-fit: cover;
     }
 
@@ -87,6 +88,7 @@
     .dropdown-item:last-child {
       border-bottom: none;
     }
+
     /* 扫一扫页面样式 */
     .page {
       position: absolute;
@@ -100,6 +102,7 @@
     }
 
     .page.active {
+
       left: 0;  /* 激活时移动到正常位置 */
     }
 
@@ -408,6 +411,18 @@
       const cameraFeed = document.getElementById('cameraFeed');
       const cardClose = document.getElementById('cardClose');
       const cardHome = document.getElementById('cardHome');
+      const themeColorMeta = document.getElementById('theme-color');
+      
+      // 更改状态栏颜色的函数
+      function changeStatusBarColor(color) {
+        // 更新theme-color元标签
+        themeColorMeta.setAttribute('content', color);
+        
+        // 尝试使用新的API（iOS 15+支持）
+        if (window.SafariViewController) {
+          window.SafariViewController.setBarTintColor(color);
+        }
+      }
       
       // iOS Safari 全屏模式处理
       if (navigator.standalone) {
@@ -436,6 +451,9 @@
       
       // 确保页面加载时扫码页面是隐藏的
       scanPage.classList.remove('active');
+      
+      // 初始页面设置白色状态栏
+      changeStatusBarColor('#ffffff');
       
       // 打开摄像头的函数
       async function startCamera() {
@@ -473,35 +491,49 @@
       scanQrCode.addEventListener('click', () => {
         scanPage.classList.add('active');
         startCamera(); // 激活摄像头
+        // 扫一扫页面使用黑色状态栏
+        changeStatusBarColor('#000000');
       });
 
       scanPage.addEventListener('click', () => {
         stopCamera(); // 停止摄像头
-        
         scanPage.classList.remove('active');
         imgContainer2.classList.add('active');
+        // 电子工卡页面使用蓝色状态栏
+        changeStatusBarColor('#031F57');
       });
 
       // 返回按钮
       backButton.addEventListener('click', () => {
         stopCamera(); // 停止摄像头
         scanPage.classList.remove('active');
+        // 返回主页面，恢复白色状态栏
+        changeStatusBarColor('#ffffff');
       });
 
       cardClose.addEventListener('click', () => {
         imgContainer2.classList.remove('active');
+        // 返回主页面，恢复白色状态栏
+        changeStatusBarColor('#ffffff');
       });
 
       cardHome.addEventListener('click', () => {
         imgContainer3.classList.remove('active');
         imgContainer2.classList.remove('active');
+        // 返回主页面，恢复白色状态栏
+        changeStatusBarColor('#ffffff');
       });
 
       myCard.addEventListener('click', () => {
         imgContainer3.classList.add('active');
+        // 我的工卡页面使用绿色状态栏
+        changeStatusBarColor('#4E75E3');
       });
+      
       resultImgClose.addEventListener('click', () => {
         imgContainer3.classList.remove('active');
+        // 返回电子工卡页面，使用蓝色状态栏
+        changeStatusBarColor('#031F57');
       });
     });
   </script>
